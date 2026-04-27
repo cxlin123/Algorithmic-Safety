@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Local API credentials -- never commit
+.env.local
+*.key
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Caches
+.cache/
+huggingface/
+
+# Local raw MedQA dump (download separately, see README)
+data/phrases_no_exclude_*.jsonl
+
+# Intermediate prefilter logs
+data/_prefilter_raw.jsonl
+
+# Stale figure variants
+figures/*test*.png
+figures/*test*.pdf
+figures/*v1*.png
+figures/*panelA_variants*.png
