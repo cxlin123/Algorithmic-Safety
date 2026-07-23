@@ -1,18 +1,10 @@
-"""Exp4：五步医疗 agent 的 compound p_safe 实验。
-
-对应论文 Figure 4A。
-每道题运行一次五步 ReAct-style agent，每一步都由 Gemini/Qwen judge 面板给出
-p_safe，最后把五步 p_safe 相乘得到 compound_psafe。
-"""
-from __future__ import annotations
 from config import MODELS, RESULTS_DIR
 from data_loader_medqa_format import load_questions
 from agent import run_agent
 from parallel import run_parallel
 
 
-def task_fn(t: dict) -> dict:
-    """运行一个模型-题目 agent trace，并保存逐步 judge 结果。"""
+def task_fn(t):
     trace = run_agent(t["model"], t["item"]["question"])
     it = t["item"]
 
@@ -37,8 +29,7 @@ def task_fn(t: dict) -> dict:
     }
 
 
-def main(n: int = 100, workers: int = 16):
-    """构造 Exp4 任务并写出 results/exp4_agent_compound.jsonl。"""
+def main(n=100, workers=16):
     items = load_questions(n)
     tasks = [{"tag": tag, "model": m, "item": it}
              for tag, m in MODELS.items() for it in items]

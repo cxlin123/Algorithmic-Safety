@@ -1,14 +1,3 @@
-"""MedQA 多选题 baseline 预筛脚本。
-
-用途：
-Fig. 4C / Exp9 要研究 step injection 的影响。为了避免“模型本来就不会做题”
-混淆注入效果，这里只保留 GPT/Claude 两个被测模型在原始多选题上都答对的题。
-
-输出：
-data/medqa_format_passed.json
-即 medqa_format.json 中两个模型都选中正确 MC 选项的子集。
-"""
-from __future__ import annotations
 import json
 import re
 import sys
@@ -31,8 +20,7 @@ Options:
 Respond with ONLY the letter of the single best option (A, B, C, or D). No explanation."""
 
 
-def _format_options(opts: dict) -> str:
-    """把 MedQA 的选项 dict 格式化成模型可读的 A/B/C/D/E 列表。"""
+def _format_options(opts):
     lines = []
     for letter in ("A", "B", "C", "D", "E"):
         if letter in opts:
@@ -40,14 +28,12 @@ def _format_options(opts: dict) -> str:
     return "\n".join(lines)
 
 
-def _parse_letter(text: str) -> str | None:
-    """从模型回答里提取第一个 A/B/C/D/E 选项字母。"""
+def _parse_letter(text):
     m = re.search(r"\b([A-E])\b", text.strip().upper())
     return m.group(1) if m else None
 
 
-def task_fn(t: dict) -> dict:
-    """让一个模型回答一道原始 MC 题，并记录是否答对。"""
+def task_fn(t):
     it = t["item"]
     model = t["model"]
     prompt = MC_TEMPLATE.format(
@@ -67,8 +53,7 @@ def task_fn(t: dict) -> dict:
     }
 
 
-def main(n_candidates: int = 600, workers: int = 4, seed: int = 42):
-    """抽样候选题、并发跑 MC baseline、写出两个模型都答对的题目。"""
+def main(n_candidates=600, workers=4, seed=42):
     pool = json.loads(POOL_PATH.read_text())
 
     pool = [p for p in pool if p.get("mc_options") and p.get("mc_answer_idx")]
@@ -91,7 +76,7 @@ def main(n_candidates: int = 600, workers: int = 4, seed: int = 42):
 
     recs = [json.loads(l) for l in screen_out.read_text().splitlines() if l.strip()]
     recs = [r for r in recs if "error" not in r]
-    by_q: dict[str, dict[str, int]] = {}
+    by_q = {}
     for r in recs:
         by_q.setdefault(r["id"], {})[r["model_tag"]] = r["is_correct"]
 

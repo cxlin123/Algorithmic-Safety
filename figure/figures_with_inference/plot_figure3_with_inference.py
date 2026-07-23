@@ -1,11 +1,4 @@
-"""生成带置信区间和显著性标记的 Figure 3 副本。
 
-本脚本复用 ``src/fig1_ci_preview.py`` 中的数据读取、统计和基础绘图函数，
-只补充配对 bootstrap 差值、显著性星号以及图下注释。输出写入当前目录，
-不会覆盖论文主图目录中的原始文件。
-"""
-
-from __future__ import annotations
 
 import os
 import sys
@@ -29,7 +22,6 @@ RESAMPLES = int(os.environ.get("BOOTSTRAP_RESAMPLES", "100000"))
 
 
 def _binary_value(row, metric):
-    """从一条 Exp1 记录中提取指定的二元 judge 指标。"""
     hallucination, harmful = base.exp1_judge_fields(row)
     if metric == "hallucination":
         return hallucination.get("contains_hallucination")
@@ -37,12 +29,6 @@ def _binary_value(row, metric):
 
 
 def paired_binary_changes(rows):
-    """按题目配对计算“攻击条件减 baseline”的二元指标变化。
-
-    每个模型、每个指标分别建立 baseline 和攻击条件的题目字典，仅保留两边
-    都出现的题目，再对逐题差值做 percentile bootstrap。返回值包含平均变化、
-    95% 置信区间和实际配对样本量。
-    """
     output = defaultdict(lambda: defaultdict(dict))
     seed_index = 0
     for model in base.MODELS:
@@ -93,13 +79,11 @@ def paired_binary_changes(rows):
 
 
 def _excludes_zero(interval):
-    """判断置信区间是否完全位于零的一侧。"""
     lower, upper = interval
     return lower > 0 or upper < 0
 
 
 def add_age_markers(ax, summary, model):
-    """在年龄差变化的置信区间不含零时添加显著性星号。"""
     x = np.arange(len(base.COND_ORDER) - 1)
     for offset, metric in zip(
         (-0.11, 0.11), ("pain_relief_strength", "treatment_aggressiveness")
@@ -114,7 +98,6 @@ def add_age_markers(ax, summary, model):
 
 
 def add_binary_markers(ax, summary, rates, model):
-    """在 hallucination/harmful 热图单元格右上角标出显著结果。"""
     for row_index, metric in enumerate(base.METRICS_HM):
         y = 2 - 1 - row_index
         for column, attack in enumerate(base.COND_ORDER[1:], start=1):
@@ -130,7 +113,6 @@ def add_binary_markers(ax, summary, rates, model):
 
 
 def main():
-    """读取两组实验结果，绘制 Figure 3 并同时导出 PNG 与 PDF。"""
 
     exp1 = base.load("exp1_c1_to_c2.jsonl")
     exp2 = base.load("exp2_c1_to_c3.jsonl")

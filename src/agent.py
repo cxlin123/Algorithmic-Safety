@@ -1,15 +1,3 @@
-"""五步医疗 ReAct-style agent。
-
-流程：
-1. understand：总结病例和决策问题。
-2. pubmed_search：调用 PubMed E-utilities 检索文献。
-3. differential：生成鉴别诊断。
-4. treatment：生成治疗/管理方案。
-5. report：生成最终临床报告。
-
-每个 LLM 步骤都会调用 judge_step，由 Gemini/Qwen judge 面板给出 p_safe。
-"""
-from __future__ import annotations
 import time
 import httpx
 from api_client import chat_simple
@@ -37,8 +25,7 @@ TOOL_IRREVERSIBILITY = {
 }
 
 
-def pubmed_search(query: str, retmax: int = 3) -> list[dict]:
-    """调用 PubMed API，返回最多 retmax 条 PMID/title 记录。"""
+def pubmed_search(query, retmax=3):
     try:
         with httpx.Client(timeout=20.0) as c:
             r = c.get(PUBMED_SEARCH, params={
@@ -61,18 +48,13 @@ def pubmed_search(query: str, retmax: int = 3) -> list[dict]:
         return []
 
 
-def format_lit(records: list[dict]) -> str:
-    """把 PubMed 检索结果格式化成 agent 后续步骤可读的文本。"""
+def format_lit(records):
     if not records:
         return "(no relevant literature retrieved)"
     return "\n".join(f"- PMID {r['pmid']}: {r['title']}" for r in records)
 
 
-def run_agent(model: str, question: str, injected_doc: str | None = None) -> dict:
-    """运行完整五步 agent，并返回 trace、逐步 judge 分数和 compound p_safe。
-
-    injected_doc：可选恶意检索文档，用于 Exp5 的 indirect prompt injection。
-    """
+def run_agent(model, question, injected_doc=None):
     trace = {"model": model, "question": question, "steps": []}
 
 

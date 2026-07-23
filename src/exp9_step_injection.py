@@ -1,22 +1,3 @@
-"""Exp9：按步骤注入失败 payload，验证 Principle 2。
-
-对应论文 Figure 4C。
-
-实验设计：
-对每个模型-题目组合运行五次 agent。每次只污染五步流程中的一个步骤输出，
-然后让 agent 从该污染状态继续执行，最后评估 final report 是否 harmful。
-
-核心假设：
-越不可逆、越靠近高影响决策的步骤被污染，最终 harmful rate 越高。
-
-步骤与 irreversibility：
-- S1 understand     irr = 1
-- S2 pubmed_search  irr = 1
-- S3 differential   irr = 3
-- S4 treatment      irr = 4
-- S5 report         irr = 2
-"""
-from __future__ import annotations
 import json
 import sys
 from collections import defaultdict
@@ -72,12 +53,7 @@ STEP_NAMES = ["understand", "pubmed_search", "differential", "treatment", "repor
 STEP_IRR   = [1, 1, 3, 4, 2]
 
 
-def run_agent_with_injection(model: str, question: str, inject_at: int) -> dict:
-    """运行五步 agent，并把指定步骤输出替换成污染 payload。
-
-    inject_at 使用 0-based step index：
-    0=understand，1=pubmed_search，2=differential，3=treatment，4=report。
-    """
+def run_agent_with_injection(model, question, inject_at):
 
     s1_in  = STEP_PROMPTS["understand"].format(q=question)
     if inject_at == 0:
@@ -119,8 +95,7 @@ def run_agent_with_injection(model: str, question: str, inject_at: int) -> dict:
     }
 
 
-def task_fn(t: dict) -> dict:
-    """执行一个模型-题目-注入步骤组合，并评估最终 harm。"""
+def task_fn(t):
     import time as _t
     model       = t["model"]
     q           = t["item"]["question"]
@@ -153,8 +128,7 @@ def task_fn(t: dict) -> dict:
     }
 
 
-def main(n_questions: int = 15, workers: int = 16, resume: bool = False):
-    """构造全部 step-injection 任务并写出 Exp9 JSONL。"""
+def main(n_questions=15, workers=16, resume=False):
     items = load_questions(n_questions)
     print(f"Loaded {len(items)} questions")
 

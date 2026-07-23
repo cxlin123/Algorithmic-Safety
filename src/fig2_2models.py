@@ -1,16 +1,3 @@
-"""绘制论文 Figure 4：compound agent risk 与 Principle 2。
-
-输入：
-- results/exp4_agent_compound.jsonl：五步 agent 的逐步 p_safe。
-- results/exp5_agent_jailbreak.jsonl：clean vs attacked compound p_safe。
-- results/exp9_step_injection.jsonl：不同步骤注入后的 final harmful rate。
-
-三个面板：
-- A：累计 p_safe 随 agent 步骤衰减。
-- B：clean 与 attacked agent 的 compound p_safe 对比。
-- C：按注入步骤统计 final harm rate，并叠加 naive irreversibility 预测线。
-"""
-from __future__ import annotations
 import json, os, statistics, sys
 from collections import defaultdict
 from pathlib import Path
@@ -50,7 +37,6 @@ STEP_IRR   = [1, 1, 3, 4, 2]
 
 
 def load(fname):
-    """读取 results/ 下的 JSONL，跳过 error 行。"""
     rows = []
     for line in (RESULTS_DIR / fname).read_text().splitlines():
         if not line.strip():
@@ -65,7 +51,6 @@ def load(fname):
 
 
 def compute_cumulative(recs):
-    """计算每个模型五步平均 p_safe 的累计乘积。"""
     out = {}
     for m in MODELS:
         per_step = []
@@ -92,7 +77,6 @@ def compute_cumulative(recs):
 
 
 def draw_panel_A(ax, cum):
-    """绘制 cumulative p_safe 随步骤下降的折线图。"""
     xs = np.arange(1, 6)
     for m in MODELS:
         if m not in cum:
@@ -108,7 +92,7 @@ def draw_panel_A(ax, cum):
             "claude": -0.020,
             "llama": -0.038 if len(MODELS) > 2 else -0.020,
         }.get(m, 0.018)
-        for x, y in zip(xs, ys):                                      
+        for x, y in zip(xs, ys):
             va = "bottom" if label_offset > 0 else "top"
             ax.text(x, y + label_offset, f"{y:.3f}",
                     ha="center", va=va,
@@ -135,7 +119,6 @@ def draw_panel_A(ax, cum):
 
 
 def compute_exp5(recs):
-    """计算 clean 和 attacked agent 的平均 compound p_safe。"""
     out = {}
     for m in MODELS:
         clean_vals, attacked_vals = [], []
@@ -161,7 +144,6 @@ def compute_exp5(recs):
 
 
 def draw_panel_B(ax, exp5):
-    """绘制 clean/attacked dumbbell，对比攻击前后 compound p_safe。"""
     xs = np.arange(len(MODELS))
     for i, m in enumerate(MODELS):
         if m not in exp5:
@@ -220,7 +202,6 @@ def draw_panel_B(ax, exp5):
 
 
 def compute_exp9(recs):
-    """按模型和注入步骤统计 final_harmful 均值。"""
     bucket = defaultdict(lambda: defaultdict(list))
     for r in recs:
         m = r.get("model_tag")
@@ -255,7 +236,6 @@ def compute_exp9(recs):
 
 
 def draw_panel_C(ax, exp9):
-    """绘制不同注入点的 final harm rate，并叠加 irreversibility 预测线。"""
     n_steps = 5
     n_models = len(MODELS)
     xs = np.arange(n_steps)
@@ -320,7 +300,6 @@ def draw_panel_C(ax, exp9):
 
 
 def main():
-    """读取 Exp4/Exp5/Exp9 结果并输出 Figure 4；可切换单 judge 视图。"""
     recs4 = load("exp4_agent_compound.jsonl")
     recs5 = load("exp5_agent_jailbreak.jsonl")
     recs9 = load("exp9_step_injection.jsonl")

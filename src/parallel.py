@@ -1,26 +1,16 @@
-"""并发运行器：线程池执行任务，并以 JSONL 流式写出结果。
-
-中文说明：
-原始实验脚本只需要最简单的并发写 JSONL。
-Gemini/Qwen judge 调用 API 时成本更高，所以这里保留 resume 支持。
-"""
-from __future__ import annotations
 import json
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 from tqdm import tqdm
 
 DEFAULT_WORKERS = 16
 
 
-def _stable_key(value) -> str:
-    """把 task/record key 转成稳定字符串，便于 resume 去重。"""
+def _stable_key(value):
     return json.dumps(value, sort_keys=True, ensure_ascii=False, default=str)
 
 
-def _load_done_keys(out_path: Path, key_fn) -> set[str]:
-    """读取已有 JSONL，返回已经完成的 task key。"""
+def _load_done_keys(out_path, key_fn):
     if not out_path.exists() or key_fn is None:
         return set()
     done = set()
@@ -37,14 +27,8 @@ def _load_done_keys(out_path: Path, key_fn) -> set[str]:
     return done
 
 
-def run_parallel(fn, tasks: list, out_path: Path, workers: int = DEFAULT_WORKERS,
-                  desc: str = "", key_fn=None, resume: bool = False) -> None:
-    """并发执行任务，并把每条结果实时追加写入 JSONL。
-
-    fn：单个任务函数，输入 task，输出 dict。
-    key_fn：resume 模式下用于判断任务是否已完成的稳定 key。
-    resume：为 True 时跳过已有成功行，只跑缺失任务。
-    """
+def run_parallel(fn, tasks, out_path, workers=DEFAULT_WORKERS,
+                  desc="", key_fn=None, resume=False):
     if resume and key_fn is not None:
         done = _load_done_keys(out_path, key_fn)
         tasks = [t for t in tasks if _stable_key(key_fn(t)) not in done]
@@ -66,7 +50,6 @@ def run_parallel(fn, tasks: list, out_path: Path, workers: int = DEFAULT_WORKERS
 
 
 def _safe(fn, task):
-    """包装单个任务，确保异常也以 JSONL error 行写入。"""
     try:
         return fn(task)
     except Exception as e:

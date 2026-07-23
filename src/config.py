@@ -1,8 +1,3 @@
-"""全局配置：API、被测模型、Gemini/Qwen judge、路径。
-
-这个目录是基于原始 Algorithmic-Safety-main 拷贝后改造的版本。
-主要变化是：原来的单一 GPT-5 judge 被替换为 Gemini/Qwen 双 judge。
-"""
 import os
 from pathlib import Path
 
@@ -37,8 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 
 
-def project_path_from_env(env_name: str, default_dir: str) -> Path:
-    """读取目录环境变量；相对路径自动放在当前工程目录下。"""
+def project_path_from_env(env_name, default_dir):
     raw = os.environ.get(env_name)
     if not raw:
         return ROOT / default_dir

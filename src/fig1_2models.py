@@ -1,18 +1,3 @@
-"""绘制论文 Figure 3：C1 × C2 × C3 cross-class safety interactions。
-
-输入：
-- results/exp1_c1_to_c2.jsonl：hallucination / harmful rate。
-- results/exp2_c1_to_c3.jsonl：年龄分层 bias 分数。
-
-图形结构：
-- 每列对应一个被测模型。
-- 上方面板显示 age gap 相对 baseline 的变化。
-- 下方热图显示 hallucination 与 harmful 在各 jailbreak 条件下的 rate。
-
-注意：
-图中文字保持英文，便于直接用于论文展示；代码注释使用中文，便于检查。
-"""
-from __future__ import annotations
 import json, os, statistics, sys
 from collections import defaultdict
 from pathlib import Path
@@ -66,7 +51,6 @@ MODEL_PAIR = {
 
 
 def load(fname):
-    """读取 results/ 下的 JSONL，跳过空行和 error 行。"""
     rows = []
     for line in (RESULTS_DIR / fname).read_text().splitlines():
         if not line.strip():
@@ -80,7 +64,6 @@ def load(fname):
 
 
 def exp1_judge_fields(row):
-    """按当前视图取 Exp1 的 hallucination/harmful 字段。"""
     if JUDGE_VIEW:
         payload = (row.get("judges") or {}).get(JUDGE_VIEW) or {}
         return payload.get("hallucination", {}) or {}, payload.get("harmful", {}) or {}
@@ -88,7 +71,6 @@ def exp1_judge_fields(row):
 
 
 def exp2_bias_fields(row):
-    """按当前视图取 Exp2 的 bias 字段。"""
     if JUDGE_VIEW:
         payload = (row.get("judges") or {}).get(JUDGE_VIEW) or {}
         return payload.get("bias", {}) or {}
@@ -96,7 +78,6 @@ def exp2_bias_fields(row):
 
 
 def compute_exp1_matrix(recs):
-    """把 Exp1 记录聚合成模型 × 条件 × 指标的 rate 矩阵。"""
     bucket = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for r in recs:
         m = r.get("model_tag")
@@ -119,7 +100,6 @@ def compute_exp1_matrix(recs):
 
 
 def compute_exp2_age(recs, key):
-    """按模型、条件、年龄组统计某个 bias 分数字段的均值。"""
     bucket = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for r in recs:
         m = r.get("model_tag")
@@ -143,11 +123,6 @@ def compute_exp2_age(recs, key):
 
 
 def draw_grouped_bars(ax, pain_data, treat_data, model):
-    """绘制 age-gap fold-change 柱图。
-
-    柱高 = 当前条件下 elderly-pediatric gap / baseline gap。
-    因此 baseline 固定为 1.0，其他 jailbreak 条件显示相对放大或缩小。
-    """
     light, dark = MODEL_PAIR[model]
 
     def gap(d, cond):
@@ -204,10 +179,6 @@ def draw_grouped_bars(ax, pain_data, treat_data, model):
 
 
 def draw_dumbbell_combined(ax, pain_data, treat_data, model):
-    """备用 dumbbell 画法：同一 y 轴上展示 pain/treatment 两个年龄差异。
-
-    当前 main() 使用 grouped bar；这个函数保留用于快速切换展示形式。
-    """
     light, dark = MODEL_PAIR[model]
     xs = np.arange(len(COND_ORDER))
 
@@ -272,7 +243,6 @@ def draw_dumbbell_combined(ax, pain_data, treat_data, model):
 
 
 def draw_heatmap(ax, matrix, cmap, show_ylabels=True):
-    """绘制 hallucination/harmful rate 热图。"""
     n_rows, n_cols = matrix.shape
     cell = 0.86
     pad  = (1 - cell) / 2
@@ -311,7 +281,6 @@ def draw_heatmap(ax, matrix, cmap, show_ylabels=True):
 
 
 def main():
-    """生成 Figure 3；若指定单 judge，则文件名带 judge 后缀。"""
     recs1 = load("exp1_c1_to_c2.jsonl")
     recs2 = load("exp2_c1_to_c3.jsonl")
 

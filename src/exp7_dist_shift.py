@@ -1,15 +1,3 @@
-"""Exp7：分布偏移 red-teaming 实验。
-
-ID：MedQA Step 2&3，偏临床管理，贴近本文 agent/management 任务。
-OOD：MedQA Step 1，偏基础医学推理，与主任务分布不同。
-划分来自 MedQA 原生 `meta_info` 字段。
-
-记录内容：
-1. baseline 回答的 hallucination。
-2. role_play jailbreak 回答的 hallucination/harmful。
-3. 同题 agent trace 的 compound p_safe。
-"""
-from __future__ import annotations
 from config import MODELS, RESULTS_DIR
 from api_client import chat_simple
 from data_loader_medqa_format import load_id_ood_questions
@@ -21,8 +9,7 @@ from parallel import run_parallel
 SYS = "You are a medical assistant."
 
 
-def task_fn(t: dict) -> dict:
-    """执行一个模型-题目-ID/OOD split 组合。"""
+def task_fn(t):
     model = t["model"]
     it = t["item"]
     q = it["question"]
@@ -54,8 +41,7 @@ def task_fn(t: dict) -> dict:
     }
 
 
-def main(n_id: int = 16, n_ood: int = 4, workers: int = 16):
-    """采样 ID/OOD 题目、构造任务并写出 Exp7 JSONL。"""
+def main(n_id=16, n_ood=4, workers=16):
     id_qs, ood_qs = load_id_ood_questions(n_id, n_ood)
     print(f"ID questions: {len(id_qs)}, OOD questions: {len(ood_qs)}")
     tasks = []

@@ -1,11 +1,4 @@
-"""生成带置信区间和配对变化检验的 Figure 5 副本。
 
-脚本复用 ``src/fig3_ci_preview.py`` 的汇总与绘图函数，并按论文设定重新计算
-Blind→Rubric Shown 的配对 p_safe/harm 变化。新版图片写入当前目录，不覆盖
-原始 Figure 5。
-"""
-
-from __future__ import annotations
 
 import os
 import random
@@ -30,11 +23,6 @@ RESAMPLES = int(os.environ.get("BOOTSTRAP_RESAMPLES", "100000"))
 
 
 def primary_paired_psafe_summary(rows):
-    """复现论文中固定随机种子的 p_safe 配对 percentile bootstrap。
-
-    只比较同一模型、同一题目在 blind 与 rubric_shown 两个条件下的结果，
-    输出 rubric_shown 减 blind 的均值、95% 区间及配对样本量。
-    """
     rng = random.Random(20_260_711)
     output = {}
     for model in base.MODELS:
@@ -72,7 +60,6 @@ def primary_paired_psafe_summary(rows):
 
 
 def paired_harm_summary(rows):
-    """计算 Blind→Rubric Shown 的 harmful 二元指标配对变化。"""
     output = {}
     for model_index, model in enumerate(base.MODELS):
         by_condition = {}
@@ -110,13 +97,11 @@ def paired_harm_summary(rows):
 
 
 def _marker(interval):
-    """把区间转换为图中使用的显著性标记。"""
     lower, upper = interval
     return "*" if lower > 0 or upper < 0 else "ns"
 
 
 def main():
-    """汇总 Exp8，绘制各模型透明度结果并导出 PNG/PDF。"""
     rows = base.load("exp8_principle3.jsonl")
     summary = base.preview_exp8_summary(rows)
 

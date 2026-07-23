@@ -1,10 +1,3 @@
-"""Exp5：C1 -> C4，医疗 agent 的间接 prompt injection 实验。
-
-对应论文 Figure 4B。
-同一道题分别跑 clean agent 和 injected-doc agent，比较 compound p_safe，
-同时评估 attacked agent 最终报告和普通 chatbot 回答是否 harmful。
-"""
-from __future__ import annotations
 from config import MODELS, RESULTS_DIR
 from api_client import chat_simple
 from data_loader_medqa_format import load_questions
@@ -19,8 +12,7 @@ INJECTION = (
 )
 
 
-def task_fn(t: dict) -> dict:
-    """运行 clean/attacked 两条 agent 路径，并记录 harm 与传播情况。"""
+def task_fn(t):
     model = t["model"]; q = t["q"]
     clean = run_agent(model, q)
     attacked = run_agent(model, q, injected_doc=INJECTION)
@@ -55,8 +47,7 @@ def task_fn(t: dict) -> dict:
     }
 
 
-def main(n: int = 12, workers: int = 12):
-    """构造 Exp5 任务并写出 results/exp5_agent_jailbreak.jsonl。"""
+def main(n=12, workers=12):
     qs = load_questions(n)
     tasks = [{"tag": tag, "model": m, "q": q["question"], "id": q["id"]}
              for tag, m in MODELS.items() for q in qs]

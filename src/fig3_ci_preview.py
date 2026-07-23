@@ -1,14 +1,3 @@
-"""绘制论文 Figure 5：transparency / rubric disclosure 实验。
-
-当前主图只绘制 Exp8：
-- x 轴为 Blind、Rubric Shown、Adversarial 三个条件。
-- 实线显示 judge-visible p_safe。
-- 虚线显示 harmful-response rate。
-
-文件中仍保留 Exp7 的计算和绘图函数，便于需要时恢复 distribution-shift
-panel；当前 main() 没有调用 Exp7。
-"""
-from __future__ import annotations
 import json, os, statistics, sys
 from collections import defaultdict
 from pathlib import Path
@@ -43,7 +32,6 @@ EXP8_LABELS = ["Blind", "Rubric\nShown", "Adversarial"]
 
 
 def load(fname):
-    """读取 results/ 下的 JSONL，跳过 error 行。"""
     rows = []
     for line in (RESULTS_DIR / fname).read_text().splitlines():
         if not line.strip():
@@ -56,7 +44,6 @@ def load(fname):
 
 
 def compute_exp7(recs):
-    """把 Exp7 记录聚合为 {model: {split: {metric: rate}}}。"""
     by = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for r in recs:
         m, sp = r.get("model_tag"), r.get("split")
@@ -90,7 +77,6 @@ def compute_exp7(recs):
 
 
 def draw_panel_A(ax, exp7):
-    """绘制 ID/OOD dumbbell；圆点为 hallucination，方块为 harm。"""
     xs = np.arange(len(MODELS))
     sub = 0.13
 
@@ -102,7 +88,6 @@ def draw_panel_A(ax, exp7):
         x_ood = exp7[m]["OOD"].get("harm", 0)
 
         def lbl_offsets(a, b, gap=0.05):
-            """若两个标签过近，则把它们上下错开，避免重叠。"""
             if abs(a - b) >= gap:
                 return 0.0, 0.0
             return (-gap/2, gap/2) if a < b else (gap/2, -gap/2)
@@ -161,7 +146,6 @@ def draw_panel_A(ax, exp7):
 
 
 def compute_exp8(recs):
-    """把 Exp8 记录聚合为 {model: {condition: {p_safe, harm}}}。"""
     by = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for r in recs:
         m, c = r.get("model_tag"), r.get("condition")
@@ -190,7 +174,6 @@ def compute_exp8(recs):
 
 
 def draw_panel_B(ax_list, exp8):
-    """绘制每个模型在三种透明度条件下的 p_safe 与 harmful rate。"""
     xs = np.arange(len(EXP8_CONDS))
     panel_letters = ["A", "B", "C"]
     for idx, (ax, m) in enumerate(zip(ax_list, MODELS)):
@@ -233,7 +216,6 @@ def draw_panel_B(ax_list, exp8):
 
 
 def main():
-    """读取 Exp8 结果并输出 Figure 5；可切换单 judge 视图。"""
     recs8 = load("exp8_principle3.jsonl")
     exp8  = compute_exp8(recs8)
 
@@ -400,7 +382,6 @@ def draw_exp8_ci_preview(ax, summary, model, panel_letter):
 
 
 def main():
-    """Generate an uncertainty-visualization preview without replacing Figure 5."""
     summary = preview_exp8_summary(load("exp8_principle3.jsonl"))
     fig = plt.figure(figsize=(12.5, 5.3), facecolor="white")
     grid = gridspec.GridSpec(

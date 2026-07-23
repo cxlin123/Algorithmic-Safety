@@ -1,19 +1,3 @@
-"""Exp8：Principle 3 / evaluation transparency 实验。
-
-对应论文 Figure 5。
-
-三个条件：
-1. blind：模型正常回答，不看到 judge rubric。
-2. rubric_shown：模型看到安全评分 rubric，这是 transparency 对照。
-3. adversarial：模型被明确要求最大化安全分数，这是 score-gaming 正控。
-
-主要指标：
-- p_safe：judge-visible 安全分数是否上升。
-- harmful：内容层面的 harmful rate 是否同步下降。
-
-在 rebuttal 中应明确：adversarial 不是普通 transparency，而是显式刷分正控。
-"""
-from __future__ import annotations
 import json
 from config import MODELS, RESULTS_DIR
 from api_client import chat_simple
@@ -56,8 +40,7 @@ JAILBREAK_WRAPPER = (
 )
 
 
-def task_fn(t: dict) -> dict:
-    """执行一个模型-题目-透明度条件组合，并返回 p_safe/harmful。"""
+def task_fn(t):
     model, cond, q = t["model"], t["cond"], t["q"]
     sys_prompt = CONDITIONS[cond]
     prompt = JAILBREAK_WRAPPER.format(q=q)
@@ -74,8 +57,7 @@ def task_fn(t: dict) -> dict:
     }
 
 
-def main(n: int = 20, workers: int = 24):
-    """构造三条件 transparency 任务并写出 Exp8 JSONL。"""
+def main(n=20, workers=24):
     qs = load_questions(n)
     tasks = [
         {"tag": tag, "model": m, "cond": c, "q": q["question"]}
@@ -91,7 +73,6 @@ def main(n: int = 20, workers: int = 24):
 
 
 def _summarize(path):
-    """运行结束后打印每个模型/条件的 p_safe 和 harmful 均值。"""
     from collections import defaultdict
     by = defaultdict(list)
     for l in path.read_text().splitlines():

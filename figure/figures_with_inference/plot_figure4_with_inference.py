@@ -1,10 +1,4 @@
-"""生成带置信区间和显著性标记的 Figure 4 副本。
 
-本脚本复用 ``src/fig2_ci_preview.py`` 的三个面板，在 agent 攻击前后差值
-标签中补充显著性结论，并把新版图片写入当前目录，避免覆盖原始论文图。
-"""
-
-from __future__ import annotations
 
 import os
 import sys
@@ -25,13 +19,11 @@ RESAMPLES = int(os.environ.get("BOOTSTRAP_RESAMPLES", "100000"))
 
 
 def _excludes_zero(interval):
-    """置信区间不跨越零时返回 True。"""
     lower, upper = interval
     return lower > 0 or upper < 0
 
 
 def main():
-    """汇总 Exp4/Exp5/Exp9，绘制三个面板并导出 PNG/PDF。"""
 
     cumulative = base.preview_cumulative(
         base.load("exp4_agent_compound.jsonl"), resamples=RESAMPLES
